@@ -1,0 +1,119 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  10
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convertToMeters 1;
+
+//- radius [m]
+radius  0.5;
+
+//- Channel length [m]
+length  12;
+
+// Half angle of wedge [deg]
+halfAngle 1;
+
+//- Derived quantities
+radHalfAngle #calc "degToRad($halfAngle)";
+zmax #calc "$radius*sin($radHalfAngle)";
+zmin #calc "-($zmax)";
+y    #calc "$radius*cos($radHalfAngle)";
+
+// # of divisions
+Nx  256;
+Ny  60;
+ratio 0.2;
+vertices
+(   
+    // back
+    (0       0  0)
+    ($length 0  0)
+    ($length $y $zmin)
+    (0       $y $zmin)
+
+    // front
+    ($length $y $zmax)
+    (0       $y $zmax)
+);
+
+blocks
+(
+    hex (0 1 2 3 0 1 4 5) ($Nx $Ny 1) simpleGrading (1 $ratio 1)
+);
+
+edges
+(
+    arc 2 4 ($length $radius 0)
+    arc 3 5 (0       $radius 0)
+);
+
+boundary
+(
+    wall
+    {
+        type wall;
+        faces
+        (
+            (2 3 5 4)
+        );
+    }
+    
+    inlet
+    {
+        type patch;
+        faces
+        (
+            (0 3 5 0)
+        );
+    }
+
+    outlet
+    {
+        type patch;
+        faces
+        (
+            (1 2 4 1)
+        );
+    }
+
+    centerline
+    {
+        type empty;
+        faces
+        (
+            (0 1 1 0)
+        );
+    }
+
+    wedgem
+    {
+        type wedge;
+        faces
+        (
+            (0 1 2 3)
+        );
+    }
+
+    wedgep
+    {
+        type wedge;
+        faces
+        (
+            (0 1 4 5)
+        );
+    }
+);
+
+
+// ************************************************************************* //
